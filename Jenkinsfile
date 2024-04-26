@@ -5,13 +5,6 @@ pipeline {
     }
 
     stages {
-   //     stage('Git Checkout') {
-   //         steps {
-                // Git checkout
-   //             checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/m3bin/library-app.git']])
-   //             echo 'Git Checkout Completed'
-   //         }
-   //     }
         stage('Maven Build') {
             steps {
                 // Run maven build
@@ -38,7 +31,7 @@ pipeline {
             steps {
                 // Run SonarQube analysis
                 withSonarQubeEnv('SonarQube') {
-                    sh '''mvn clean verify sonar:sonar -Dsonar.projectKey=cicd-full -Dsonar.projectName='cicd-full' -Dsonar.host.url=http://localhost:9000''' //port 9000 is default for sonar
+                    sh '''mvn clean verify sonar:sonar -Dsonar.projectKey=ci-cd-employees -Dsonar.projectName='ci-cd-employees' -Dsonar.host.url=http://localhost:9000 -Dsonar.token=sqp_b2e02e39466407dbb52e36ace6615f4aaf2287e9''' //port 9000 is default for sonar
                     echo 'SonarQube Analysis Completed'
                 }
             }
@@ -49,7 +42,7 @@ pipeline {
                 sshPublisher(
                     publishers: [
                         sshPublisherDesc(
-                            configName: 'ansible-server',
+                            configName: 'ansible',
                             transfers: [
                                 sshTransfer(
                                     cleanRemote: false,
@@ -60,7 +53,7 @@ pipeline {
                                     makeEmptyDirs: false,
                                     noDefaultExcludes: false,
                                     patternSeparator: '[, ]+',
-                                    remoteDirectory: '//opt//deploy',
+                                    remoteDirectory: '//opt//elza',
                                     remoteDirectorySDF: false,
                                     removePrefix: 'target',
                                     sourceFiles: 'target/*.jar'
@@ -81,14 +74,14 @@ pipeline {
                 sshPublisher(
                     publishers: [
                         sshPublisherDesc(
-                            configName: 'ansible-server',
+                            configName: 'ansible',
                             transfers: [
                                 sshTransfer(
                                     cleanRemote: false,
                                     excludes: '',
                                     execCommand: '''
-                                        cd /opt/deploy/
-                                        ansible-playbook start_container.yml
+                                        cd /opt/elza/
+                                        ansible-playbook docker-deploy.yml
                                     ''',
                                     execTimeout: 120000,
                                     flatten: false,
